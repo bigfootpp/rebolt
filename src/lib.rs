@@ -1,3 +1,6 @@
+mod rules;
+
+use rules::Re;
 use std::ops::Range;
 
 use regex::Regex;
@@ -16,29 +19,6 @@ pub struct Matches {
 impl Matches {
     pub fn named(&self, name: &str) -> Vec<&Match> {
         self.matches.iter().filter(|m| m.name == name).collect()
-    }
-}
-
-struct Re {
-    name: String,
-    regex: Regex,
-}
-
-impl Re {
-    fn find_matches(&self, text: &str) -> Vec<Match> {
-        let mut result: Vec<Match> = Vec::new();
-
-        for m in self.regex.captures_iter(text) {
-            let start = if m.len() > 1 { 1 } else { 0 };
-            for group in m.iter().skip(start).flatten() {
-                result.push(Match {
-                    name: self.name.clone(),
-                    content: group.as_str().to_string(),
-                    range: group.range(),
-                });
-            }
-        }
-        result
     }
 }
 
