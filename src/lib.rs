@@ -10,8 +10,10 @@ pub struct Match {
     pub name: String,
     pub content: String,
     pub range: Range<usize>,
+    pub children: Matches,
 }
 
+#[derive(Debug)]
 pub struct Matches {
     matches: Vec<Match>,
 }
@@ -55,11 +57,11 @@ mod tests {
     #[test]
     fn test_matches() {
         let rebolt = Rebolt::new()
-            .regex("year", r"\d{4}")
-            .regex("resolution", r"\d{3,4}p");
+            .regex("year", r"(\d{4})")
+            .regex("resolution", r"(\d{3,4}p)");
         let matches = rebolt.matches("The.Matrix.1999.1080p");
-        let year = matches.named("year");
-        let resolution = matches.named("resolution");
+        let year = matches.named("year")[0].children.named("year");
+        let resolution = matches.named("resolution")[0].children.named("resolution");
 
         assert_eq!(year[0].content, "1999");
         assert_eq!(resolution[0].content, "1080p");

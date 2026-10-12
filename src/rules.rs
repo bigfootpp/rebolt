@@ -1,4 +1,4 @@
-use super::Match;
+use super::{Match, Matches};
 use regex::Regex;
 
 pub struct Re {
@@ -11,14 +11,26 @@ impl Re {
         let mut result: Vec<Match> = Vec::new();
 
         for m in self.regex.captures_iter(text) {
+            let mut children_matches: Vec<Match> = Vec::new();
             let start = if m.len() > 1 { 1 } else { 0 };
             for group in m.iter().skip(start).flatten() {
-                result.push(Match {
+                children_matches.push(Match {
                     name: self.name.clone(),
                     content: group.as_str().to_string(),
                     range: group.range(),
+                    children: Matches {
+                        matches: Vec::new(),
+                    },
                 });
             }
+            result.push(Match {
+                name: self.name.clone(),
+                content: m.get(0).unwrap().as_str().to_string(),
+                range: m.get(0).unwrap().range(),
+                children: Matches {
+                    matches: children_matches,
+                },
+            });
         }
         result
     }
