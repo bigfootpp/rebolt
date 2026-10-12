@@ -69,17 +69,35 @@ mod tests {
 
     #[test]
     fn test_named_group_matches() {
-        let rebolt = Rebolt::new().regex("episode_info", r"S(?P<season>\d{2})E(?P<episode>\d{2})");
-        let matches = rebolt.matches("Doctor.Who.S02E05.720p");
-        let parent = matches.named("episode_info")[0];
+        {
+            let rebolt =
+                Rebolt::new().regex("episode_info", r"S(?P<season>\d{2})E(?P<episode>\d{2})");
+            let matches = rebolt.matches("Doctor.Who.S02E05.720p");
+            let parent = matches.named("episode_info")[0];
 
-        assert_eq!(parent.content, "S02E05");
-        assert_eq!(parent.range, 11..17);
+            assert_eq!(parent.content, "S02E05");
+            assert_eq!(parent.range, 11..17);
 
-        let season = parent.children.named("season")[0];
-        let episode = parent.children.named("episode")[0];
+            let season = parent.children.named("season")[0];
+            let episode = parent.children.named("episode")[0];
 
-        assert_eq!(season.content, "02");
-        assert_eq!(episode.content, "05")
+            assert_eq!(season.content, "02");
+            assert_eq!(episode.content, "05");
+        }
+        {
+            let rebolt =
+                Rebolt::new().regex("episode_info", r"(?:S(?P<season>\d+))?E(?P<episode>\d+)");
+            let matches = rebolt.matches("Doctor.Who.E12");
+            let parent = matches.named("episode_info")[0];
+
+            assert_eq!(parent.content, "E12");
+            assert_eq!(parent.range, 11..14);
+
+            let season_no_exist = parent.children.named("season").get(0).copied();
+            let episode = parent.children.named("episode")[0];
+
+            assert_eq!(episode.content, "12");
+            assert!(season_no_exist.is_none());
+        }
     }
 }
