@@ -66,4 +66,20 @@ mod tests {
         assert_eq!(year[0].content, "1999");
         assert_eq!(resolution[0].content, "1080p");
     }
+
+    #[test]
+    fn test_named_group_matches() {
+        let rebolt = Rebolt::new().regex("episode_info", r"S(?P<season>\d{2})E(?P<episode>\d{2})");
+        let matches = rebolt.matches("Doctor.Who.S02E05.720p");
+        let parent = matches.named("episode_info")[0];
+
+        assert_eq!(parent.content, "S02E05");
+        assert_eq!(parent.range, 11..17);
+
+        let season = parent.children.named("season")[0];
+        let episode = parent.children.named("episode")[0];
+
+        assert_eq!(season.content, "02");
+        assert_eq!(episode.content, "05")
+    }
 }
