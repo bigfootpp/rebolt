@@ -1,6 +1,10 @@
 use super::{Match, Matches};
 use regex::Regex;
 
+pub trait Rule {
+    fn find_matches(&self, text: &str) -> Vec<Match>;
+}
+
 pub struct Re {
     pub name: String,
     pub regex: Regex,
@@ -15,7 +19,10 @@ impl Re {
             regex: compiled_regex,
         }
     }
-    pub fn find_matches(&self, text: &str) -> Vec<Match> {
+}
+
+impl Rule for Re {
+    fn find_matches(&self, text: &str) -> Vec<Match> {
         let mut result: Vec<Match> = Vec::new();
 
         for m in self.regex.captures_iter(text) {

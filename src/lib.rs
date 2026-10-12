@@ -1,7 +1,8 @@
-mod rules;
+pub mod rules;
 
-use rules::Re;
 use std::ops::Range;
+
+pub use rules::{Re, Rule};
 
 #[derive(Debug)]
 pub struct Match {
@@ -23,15 +24,15 @@ impl Matches {
 }
 
 pub struct Rebolt {
-    rules: Vec<Re>,
+    rules: Vec<Box<dyn Rule>>,
 }
 
 impl Rebolt {
     pub fn new() -> Self {
         Self { rules: Vec::new() }
     }
-    pub fn rule(mut self, rule: Re) -> Self {
-        self.rules.push(rule);
+    pub fn rule(mut self, rule: impl Rule + 'static) -> Self {
+        self.rules.push(Box::new(rule));
         self
     }
     pub fn matches(&self, text: &str) -> Matches {
@@ -46,6 +47,8 @@ impl Rebolt {
 
 #[cfg(test)]
 mod tests {
+    use crate::rules::Re;
+
     use super::*;
     #[test]
     fn test_matches() {
