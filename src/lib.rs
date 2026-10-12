@@ -3,8 +3,6 @@ mod rules;
 use rules::Re;
 use std::ops::Range;
 
-use regex::Regex;
-
 #[derive(Debug)]
 pub struct Match {
     pub name: String,
@@ -32,13 +30,8 @@ impl Rebolt {
     pub fn new() -> Self {
         Self { rules: Vec::new() }
     }
-    pub fn regex(mut self, name: impl Into<String>, regex_str: &str) -> Self {
-        let compiled_str =
-            Regex::new(regex_str).expect(&format!("Regular expression not valid: {regex_str}"));
-        self.rules.push(Re {
-            name: name.into(),
-            regex: compiled_str,
-        });
+    pub fn rule(mut self, rule: Re) -> Self {
+        self.rules.push(rule);
         self
     }
     pub fn matches(&self, text: &str) -> Matches {
@@ -57,8 +50,8 @@ mod tests {
     #[test]
     fn test_matches() {
         let rebolt = Rebolt::new()
-            .regex("year", r"(\d{4})")
-            .regex("resolution", r"(\d{3,4}p)");
+            .rule(Re::new("year", r"(\d{4})"))
+            .rule(Re::new("resolution", r"(\d{3,4}p)"));
         let matches = rebolt.matches("The.Matrix.1999.1080p");
         let year = matches.named("year")[0].children.named("year");
         let resolution = matches.named("resolution")[0].children.named("resolution");
@@ -70,8 +63,10 @@ mod tests {
     #[test]
     fn test_named_group_matches() {
         {
-            let rebolt =
-                Rebolt::new().regex("episode_info", r"S(?P<season>\d{2})E(?P<episode>\d{2})");
+            let rebolt = Rebolt::new().rule(Re::new(
+                "episode_info",
+                r"S(?P<season>\d{2})E(?P<episode>\d{2})",
+            ));
             let matches = rebolt.matches("Doctor.Who.S02E05.720p");
             let parent = matches.named("episode_info")[0];
 
@@ -85,8 +80,10 @@ mod tests {
             assert_eq!(episode.content, "05");
         }
         {
-            let rebolt =
-                Rebolt::new().regex("episode_info", r"(?:S(?P<season>\d+))?E(?P<episode>\d+)");
+            let rebolt = Rebolt::new().rule(Re::new(
+                "episode_info",
+                r"(?:S(?P<season>\d+))?E(?P<episode>\d+)",
+            ));
             let matches = rebolt.matches("Doctor.Who.E12");
             let parent = matches.named("episode_info")[0];
 

@@ -7,6 +7,14 @@ pub struct Re {
 }
 
 impl Re {
+    pub fn new(name: impl Into<String>, regex_str: &str) -> Self {
+        let compiled_regex =
+            Regex::new(regex_str).expect(&format!("Regular expression not valid: {regex_str}"));
+        Self {
+            name: name.into(),
+            regex: compiled_regex,
+        }
+    }
     pub fn find_matches(&self, text: &str) -> Vec<Match> {
         let mut result: Vec<Match> = Vec::new();
 
