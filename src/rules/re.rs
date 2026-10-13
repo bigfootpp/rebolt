@@ -6,6 +6,7 @@ use crate::{Match, Matches};
 pub struct Re {
     pub name: String,
     pub regex: Regex,
+    pub priority: u8,
 }
 
 impl Re {
@@ -15,11 +16,19 @@ impl Re {
         Self {
             name: name.into(),
             regex: compiled_regex,
+            priority: 0,
         }
+    }
+    pub fn priority(mut self, priority: u8) -> Self {
+        self.priority = priority;
+        self
     }
 }
 
 impl Rule for Re {
+    fn get_priority(&self) -> u8 {
+        self.priority
+    }
     fn find_matches(&self, text: &str) -> Vec<Match> {
         let mut result: Vec<Match> = Vec::new();
 

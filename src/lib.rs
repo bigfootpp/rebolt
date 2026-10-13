@@ -66,10 +66,9 @@ mod tests {
     #[test]
     fn test_named_group_matches() {
         {
-            let rebolt = Rebolt::new().rule(Re::new(
-                "episode_info",
-                r"S(?P<season>\d{2})E(?P<episode>\d{2})",
-            ));
+            let rebolt = Rebolt::new().rule(
+                Re::new("episode_info", r"S(?P<season>\d{2})E(?P<episode>\d{2})").priority(1),
+            );
             let matches = rebolt.matches("Doctor.Who.S02E05.720p");
             let parent = matches.named("episode_info")[0];
 
