@@ -44,9 +44,7 @@ impl Rule for Re {
                         name: name.to_string(),
                         content: group.as_str().to_string(),
                         range: group.range(),
-                        children: Matches {
-                            matches: Vec::new(),
-                        },
+                        children: Matches::new(Vec::new()),
                     });
                 }
             }
@@ -54,9 +52,7 @@ impl Rule for Re {
                 name: self.name.clone(),
                 content: m.get(0).unwrap().as_str().to_string(),
                 range: m.get(0).unwrap().range(),
-                children: Matches {
-                    matches: children_matches,
-                },
+                children: Matches::new(children_matches),
             });
         }
         result

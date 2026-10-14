@@ -1,27 +1,8 @@
 pub mod rules;
-
-use std::ops::Range;
+pub mod types;
 
 pub use rules::{Re, Rule};
-
-#[derive(Debug)]
-pub struct Match {
-    pub name: String,
-    pub content: String,
-    pub range: Range<usize>,
-    pub children: Matches,
-}
-
-#[derive(Debug)]
-pub struct Matches {
-    matches: Vec<Match>,
-}
-
-impl Matches {
-    pub fn named(&self, name: &str) -> Vec<&Match> {
-        self.matches.iter().filter(|m| m.name == name).collect()
-    }
-}
+pub use types::{Match, Matches};
 
 pub struct Rebolt {
     rules: Vec<Box<dyn Rule>>,
@@ -41,7 +22,7 @@ impl Rebolt {
             let matches = rule.find_matches(text);
             result.extend(matches);
         }
-        Matches { matches: result }
+        Matches::new(result)
     }
 }
 
