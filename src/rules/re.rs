@@ -1,7 +1,7 @@
 use regex::Regex;
 
 use super::Rule;
-use crate::{Match, Matches};
+use crate::{Match, utils::IdGenerator};
 
 pub struct Re {
     pub name: String,
@@ -29,30 +29,32 @@ impl Rule for Re {
     fn get_priority(&self) -> u8 {
         self.priority
     }
-    fn find_matches(&self, text: &str) -> Vec<Match> {
+    fn find_matches(&self, text: &str, id_gen: &mut IdGenerator) -> Vec<Match> {
         let mut result: Vec<Match> = Vec::new();
+        let parent_id = id_gen.next();
 
         for m in self.regex.captures_iter(text) {
-            let mut children_matches: Vec<Match> = Vec::new();
             let start = if m.len() > 1 { 1 } else { 0 };
             let groups = m.iter().skip(start);
             let names = self.regex.capture_names().skip(start);
             for (name_opt, group_opt) in names.zip(groups) {
                 if let Some(group) = group_opt {
                     let name = name_opt.unwrap_or(&self.name);
-                    children_matches.push(Match {
+                    result.push(Match {
+                        id: id_gen.next(),
                         name: name.to_string(),
                         content: group.as_str().to_string(),
                         range: group.range(),
-                        children: Matches::new(Vec::new()),
+                        parent_id: Some(parent_id),
                     });
                 }
             }
             result.push(Match {
+                id: parent_id,
                 name: self.name.clone(),
                 content: m.get(0).unwrap().as_str().to_string(),
                 range: m.get(0).unwrap().range(),
-                children: Matches::new(children_matches),
+                parent_id: None,
             });
         }
         result
