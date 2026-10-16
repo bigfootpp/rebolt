@@ -19,18 +19,6 @@ fn get_id_by_name(matches: &Vec<Match>) -> HashMap<String, HashSet<IdSize>> {
     map
 }
 
-fn get_id_by_parent_id(matches: &Vec<Match>) -> HashMap<IdSize, HashSet<IdSize>> {
-    let mut map: HashMap<IdSize, HashSet<IdSize>> = HashMap::new();
-    for m in matches {
-        if let Some(id) = &m.parent_id {
-            let mut set = map.remove(id).unwrap_or(HashSet::new());
-            set.insert(m.id);
-            map.insert(*id, set);
-        }
-    }
-    map
-}
-
 pub struct Rebolt {
     rules: Vec<Box<dyn Rule>>,
 }
@@ -51,13 +39,11 @@ impl Rebolt {
             result.extend(matches);
         }
         let by_name = get_id_by_name(&result);
-        let parent_map: HashMap<IdSize, HashSet<IdSize>> = get_id_by_parent_id(&result);
         let mut order: Vec<IdSize> = result.iter().map(|m| m.id).collect();
         order.sort_unstable();
         Matches {
             matches: result.into_iter().map(|m| (m.id, m)).collect(),
             by_name: by_name,
-            by_parent: parent_map,
             order: order,
         }
     }

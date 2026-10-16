@@ -12,6 +12,7 @@ pub struct Match {
     pub content: String,
     pub range: Range<IdSize>,
     pub parent_id: Option<IdSize>,
+    pub child_ids: HashSet<IdSize>,
 }
 
 impl Match {
@@ -19,7 +20,7 @@ impl Match {
         self.parent_id.is_none()
     }
     pub fn is_child(&self) -> bool {
-        self.parent_id.is_none()
+        self.parent_id.is_some()
     }
 }
 
@@ -27,7 +28,6 @@ impl Match {
 pub struct Matches {
     pub matches: HashMap<IdSize, Match>,
     pub by_name: HashMap<String, HashSet<IdSize>>,
-    pub by_parent: HashMap<IdSize, HashSet<IdSize>>,
     pub order: Vec<IdSize>,
 }
 

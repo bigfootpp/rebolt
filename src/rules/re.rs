@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use regex::Regex;
 
 use super::Rule;
@@ -31,22 +33,30 @@ impl Rule for Re {
     }
     fn find_matches(&self, text: &str, id_gen: &mut IdGenerator) -> Vec<Match> {
         let mut result: Vec<Match> = Vec::new();
-        let parent_id = id_gen.next();
 
         for m in self.regex.captures_iter(text) {
+            let mut child_ids = HashSet::new();
+
+            let parent_id = id_gen.next();
             let start = if m.len() > 1 { 1 } else { 0 };
+
             let groups = m.iter().skip(start);
             let names = self.regex.capture_names().skip(start);
+
             for (name_opt, group_opt) in names.zip(groups) {
                 if let Some(group) = group_opt {
                     let name = name_opt.unwrap_or(&self.name);
+                    let id = id_gen.next();
                     result.push(Match {
-                        id: id_gen.next(),
+                        id: id,
                         name: name.to_string(),
                         content: group.as_str().to_string(),
                         range: group.range(),
+                        child_ids: HashSet::new(),
                         parent_id: Some(parent_id),
                     });
+
+                    child_ids.insert(id);
                 }
             }
             result.push(Match {
@@ -54,6 +64,7 @@ impl Rule for Re {
                 name: self.name.clone(),
                 content: m.get(0).unwrap().as_str().to_string(),
                 range: m.get(0).unwrap().range(),
+                child_ids: child_ids,
                 parent_id: None,
             });
         }
