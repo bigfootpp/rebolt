@@ -14,6 +14,15 @@ pub struct Match {
     pub parent_id: Option<IdSize>,
 }
 
+impl Match {
+    pub fn is_root(&self) -> bool {
+        self.parent_id.is_none()
+    }
+    pub fn is_child(&self) -> bool {
+        self.parent_id.is_none()
+    }
+}
+
 #[derive(Debug)]
 pub struct Matches {
     pub matches: HashMap<IdSize, Match>,
