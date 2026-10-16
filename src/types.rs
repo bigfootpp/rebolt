@@ -19,8 +19,11 @@ impl Match {
     pub fn is_root(&self) -> bool {
         self.parent_id.is_none()
     }
-    pub fn is_child(&self) -> bool {
-        self.parent_id.is_some()
+    pub fn is_internal(&self) -> bool {
+        self.parent_id.is_some() && !self.child_ids.is_empty()
+    }
+    pub fn is_leaf(&self) -> bool {
+        self.child_ids.is_empty()
     }
 }
 
