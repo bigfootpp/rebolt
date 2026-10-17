@@ -3,6 +3,7 @@ pub mod types;
 mod utils;
 
 use std::{
+    cmp,
     collections::{HashMap, HashSet},
     ops::Range,
 };
@@ -66,15 +67,26 @@ impl Rebolt {
         let by_name = get_id_by_name(&result);
         let mut order: Vec<IdSize> = result.iter().map(|m| m.id).collect();
         let conflict: HashSet<(IdSize, IdSize)> = find_conflict(&result);
-        let id_map: HashMap<IdSize, Match> = result.into_iter().map(|m| (m.id, m)).collect();
+        let mut id_map: HashMap<IdSize, Match> = result.into_iter().map(|m| (m.id, m)).collect();
+
+        let mut final_matches: HashMap<IdSize, Match> = HashMap::new();
 
         for (c1, c2) in conflict {
-            let m1 = id_map.get(&c1).unwrap();
-            let m2 = id_map.get(&c2).unwrap();
+            let m1 = id_map.remove(&c1).unwrap();
+            let m2 = id_map.remove(&c2).unwrap();
+
+            let best;
+            if m1.priority == m2.priority {
+                best = cmp::max_by_key(m1, m2, |m| m.range.end - m.range.start)
+            } else {
+                best = cmp::max_by_key(m1, m2, |m| m.priority)
+            }
+
+            final_matches.insert(best.id, best);
         }
         order.sort_unstable();
         Matches {
-            matches: id_map,
+            matches: final_matches,
             by_name: by_name,
             order: order,
         }

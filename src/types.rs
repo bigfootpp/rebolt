@@ -8,6 +8,7 @@ pub type IdSize = usize;
 #[derive(Debug)]
 pub struct Match {
     pub id: IdSize,
+    pub priority: u8,
     pub name: String,
     pub content: String,
     pub range: Range<IdSize>,

@@ -49,6 +49,7 @@ impl Rule for Re {
                     let id = id_gen.next();
                     result.push(Match {
                         id: id,
+                        priority: self.priority,
                         name: name.to_string(),
                         content: group.as_str().to_string(),
                         range: group.range(),
@@ -61,6 +62,7 @@ impl Rule for Re {
             }
             result.push(Match {
                 id: parent_id,
+                priority: self.priority,
                 name: self.name.clone(),
                 content: m.get(0).unwrap().as_str().to_string(),
                 range: m.get(0).unwrap().range(),
