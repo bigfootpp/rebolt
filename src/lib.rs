@@ -2,7 +2,10 @@ pub mod rules;
 pub mod types;
 mod utils;
 
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    ops::Range,
+};
 
 pub use rules::{Re, Rule};
 pub use types::{IdSize, Match, Matches};
@@ -17,6 +20,27 @@ fn get_id_by_name(matches: &Vec<Match>) -> HashMap<String, HashSet<IdSize>> {
         map.insert(m.name.clone(), set);
     }
     map
+}
+
+fn overlaps<T: PartialOrd>(r1: &Range<T>, r2: &Range<T>) -> bool {
+    r1.start < r2.end && r2.start < r1.end
+}
+
+fn find_conflict(matches: &Vec<Match>) -> HashSet<(IdSize, IdSize)> {
+    let mut sorted_match: Vec<&Match> = matches.iter().collect();
+    sorted_match.sort_by_key(|m| (m.range.start, m.range.end));
+    let mut conflict: HashSet<(IdSize, IdSize)> = HashSet::new();
+    let iterator = sorted_match.iter().filter(|m| m.is_leaf());
+    for (i, m) in iterator.clone().enumerate() {
+        for m2 in iterator.clone().skip(i + 1) {
+            if overlaps(&m.range, &m2.range) {
+                conflict.insert((m.id, m2.id));
+            } else {
+                break;
+            }
+        }
+    }
+    conflict
 }
 
 pub struct Rebolt {
@@ -38,11 +62,19 @@ impl Rebolt {
             let matches = rule.find_matches(text, &mut id_gen);
             result.extend(matches);
         }
+
         let by_name = get_id_by_name(&result);
         let mut order: Vec<IdSize> = result.iter().map(|m| m.id).collect();
+        let conflict: HashSet<(IdSize, IdSize)> = find_conflict(&result);
+        let id_map: HashMap<IdSize, Match> = result.into_iter().map(|m| (m.id, m)).collect();
+
+        for (c1, c2) in conflict {
+            let m1 = id_map.get(&c1).unwrap();
+            let m2 = id_map.get(&c2).unwrap();
+        }
         order.sort_unstable();
         Matches {
-            matches: result.into_iter().map(|m| (m.id, m)).collect(),
+            matches: id_map,
             by_name: by_name,
             order: order,
         }
