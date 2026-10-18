@@ -1,25 +1,11 @@
+pub mod re;
+
 use super::Match;
-use regex::Regex;
+use crate::utils::IdGenerator;
 
-pub struct Re {
-    pub name: String,
-    pub regex: Regex,
-}
+pub use re::Re;
 
-impl Re {
-    pub fn find_matches(&self, text: &str) -> Vec<Match> {
-        let mut result: Vec<Match> = Vec::new();
-
-        for m in self.regex.captures_iter(text) {
-            let start = if m.len() > 1 { 1 } else { 0 };
-            for group in m.iter().skip(start).flatten() {
-                result.push(Match {
-                    name: self.name.clone(),
-                    content: group.as_str().to_string(),
-                    range: group.range(),
-                });
-            }
-        }
-        result
-    }
+pub trait Rule {
+    fn get_priority(&self) -> u8;
+    fn find_matches(&self, text: &str, id_gen: &mut IdGenerator) -> Vec<Match>;
 }
