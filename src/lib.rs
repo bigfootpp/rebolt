@@ -1,3 +1,4 @@
+pub mod resolver;
 pub mod rules;
 pub mod types;
 mod utils;
