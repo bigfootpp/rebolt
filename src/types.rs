@@ -59,3 +59,86 @@ impl Matches {
             .collect()
     }
 }
+
+pub enum ConflictDecision {
+    KeepLeft,
+    KeepRight,
+    Ignore,
+}
+
+pub struct ConflictCursor<'a> {
+    context: &'a ConflictContext,
+    left_id: IdSize,
+    right_id: IdSize,
+}
+
+pub struct ConflictContext {
+    matches: HashMap<IdSize, Match>,
+    conflict_set: HashSet<(IdSize, IdSize)>,
+    discarded: HashSet<IdSize>,
+}
+
+impl ConflictContext {
+    pub fn new(matches: HashMap<IdSize, Match>, conflicts: HashSet<(IdSize, IdSize)>) -> Self {
+        Self {
+            matches,
+            conflict_set: conflicts,
+            discarded: HashSet::new(),
+        }
+    }
+
+    pub fn for_each_conflict<F>(&mut self, handler: F)
+    where
+        F: Fn(&ConflictCursor) -> ConflictDecision,
+    {
+        for c in self.conflict_set.clone() {
+            if self.is_discarded(&c.0) || self.is_discarded(&c.1) {
+                continue;
+            }
+            let cursor = ConflictCursor {
+                context: &self,
+                left_id: c.0,
+                right_id: c.1,
+            };
+            let decision = handler(&cursor);
+            match decision {
+                ConflictDecision::KeepLeft => self.discard(c.1),
+                ConflictDecision::KeepRight => self.discard(c.0),
+                ConflictDecision::Ignore => {}
+            }
+        }
+    }
+
+    pub fn get(&self, id: IdSize) -> Option<&Match> {
+        if self.is_discarded(&id) {
+            None
+        } else {
+            self.matches.get(&id)
+        }
+    }
+
+    pub fn into_inner(self) -> HashMap<IdSize, Match> {
+        self.matches
+            .into_iter()
+            .filter(|(id, _)| !self.discarded.contains(id))
+            .collect()
+    }
+
+    pub fn is_discarded(&self, id: &IdSize) -> bool {
+        self.discarded.contains(id)
+    }
+
+    pub fn discard(&mut self, id: IdSize) {
+        self.discarded.insert(id);
+    }
+}
+
+impl ConflictCursor<'_> {
+    pub fn left(&self) -> &Match {
+        self.context.get(self.left_id).unwrap()
+    }
+
+    pub fn right(&self) -> &Match {
+        self.context.get(self.right_id).unwrap()
+    }
+}
