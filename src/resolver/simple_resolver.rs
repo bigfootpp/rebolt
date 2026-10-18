@@ -7,6 +7,12 @@ use crate::{
 
 pub struct SimpleResolver;
 
+impl SimpleResolver {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
 impl Resolver for SimpleResolver {
     fn resolve(&self, context: &mut ConflictContext) {
         context.for_each_conflict(|c| {
