@@ -73,3 +73,49 @@ impl Rule for Re {
         result
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Rebolt;
+
+    use super::*;
+
+    #[test]
+    fn matches_multiple_rules() {
+        let rebolt = Rebolt::new()
+            .rule(Re::new("year", r"(\d{4})"))
+            .rule(Re::new("resolution", r"(\d{3,4}p)"));
+        let matches = rebolt.matches("The.Matrix.1999.1080p");
+
+        assert_eq!(matches.named_children("year")[0].content, "1999");
+        assert_eq!(matches.named_children("resolution")[0].content, "1080p");
+    }
+
+    #[test]
+    fn matches_named_groups() {
+        let rebolt = Rebolt::new()
+            .rule(Re::new("episode_info", r"S(?P<season>\d{2})E(?P<episode>\d{2})").priority(1));
+        let matches = rebolt.matches("Doctor.Who.S02E05.720p");
+
+        let parent = matches.named("episode_info")[0];
+        assert_eq!(parent.content, "S02E05");
+        assert_eq!(parent.range, 11..17);
+
+        let season = matches.named_children("season")[0];
+        let episode = matches.named_children("episode")[0];
+        assert_eq!(season.content, "02");
+        assert_eq!(episode.content, "05");
+    }
+
+    #[test]
+    fn skips_missing_optional_group() {
+        let rebolt = Rebolt::new()
+            .rule(Re::new("episode_info", r"(?:S(?P<season>\d+))?E(?P<episode>\d+)"));
+        let matches = rebolt.matches("Doctor.Who.E12");
+
+        let season = matches.named_children("season");
+        let episode = matches.named_children("episode");
+        assert!(season.is_empty());
+        assert_eq!(episode[0].content, "12");
+    }
+}
