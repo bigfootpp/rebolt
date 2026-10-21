@@ -8,7 +8,7 @@ use std::{
     ops::Range,
 };
 
-pub use rules::{Re, Rule};
+pub use rules::{Re, Rule, Text};
 pub use types::{IdSize, Match, Matches};
 
 use crate::{
