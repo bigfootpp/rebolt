@@ -83,12 +83,23 @@ mod tests {
     #[test]
     fn matches_multiple_rules() {
         let rebolt = Rebolt::new()
-            .rule(Re::new("year", r"(\d{4})"))
-            .rule(Re::new("resolution", r"(\d{3,4}p)"));
+            .rule(Re::new("year", r"(\d{4})").priority(1))
+            .rule(Re::new("resolution", r"(\d{3,4}p)").priority(10));
         let matches = rebolt.matches("The.Matrix.1999.1080p");
 
-        assert_eq!(matches.named_children("year")[0].content, "1999");
-        assert_eq!(matches.named_children("resolution")[0].content, "1080p");
+        let year_parents = matches.named("year");
+        let resolution_parents = matches.named("resolution");
+        let years = matches.named_children("year");
+        let resolutions = matches.named_children("resolution");
+
+        assert_eq!(year_parents.len(), 1);
+        assert_eq!(resolution_parents.len(), 1);
+
+        assert_eq!(years.len(), 1);
+        assert_eq!(resolutions.len(), 1);
+
+        assert_eq!(years[0].content, "1999");
+        assert_eq!(resolutions[0].content, "1080p");
     }
 
     #[test]
@@ -109,8 +120,10 @@ mod tests {
 
     #[test]
     fn skips_missing_optional_group() {
-        let rebolt = Rebolt::new()
-            .rule(Re::new("episode_info", r"(?:S(?P<season>\d+))?E(?P<episode>\d+)"));
+        let rebolt = Rebolt::new().rule(Re::new(
+            "episode_info",
+            r"(?:S(?P<season>\d+))?E(?P<episode>\d+)",
+        ));
         let matches = rebolt.matches("Doctor.Who.E12");
 
         let season = matches.named_children("season");

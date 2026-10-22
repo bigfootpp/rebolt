@@ -101,10 +101,42 @@ impl ConflictContext {
                 right_id: c.1,
             };
             let decision = handler(&cursor);
-            match decision {
-                ConflictDecision::KeepLeft => self.discard(c.1),
-                ConflictDecision::KeepRight => self.discard(c.0),
-                ConflictDecision::Ignore => {}
+            let to_discard = match decision {
+                ConflictDecision::KeepLeft => Some(c.1),
+                ConflictDecision::KeepRight => Some(c.0),
+                ConflictDecision::Ignore => None,
+            };
+            if let Some(id) = to_discard {
+                self.discard(id);
+                self.discard_empty_parents(id);
+            }
+        }
+    }
+
+    fn discard_empty_parents(&mut self, id: IdSize) {
+        let mut current = self
+            .matches
+            .get(&id)
+            .and_then(|m| m.parent_id)
+            .filter(|parent_id| !self.is_discarded(parent_id));
+
+        while let Some(parent_id) = current {
+            let Some((parent_parent, mut child_ids)) = self
+                .matches
+                .get(&parent_id)
+                .map(|m| (m.parent_id, m.child_ids.clone()))
+            else {
+                return;
+            };
+            child_ids.retain(|child_id| !self.is_discarded(child_id));
+            if child_ids.is_empty() {
+                self.discard(parent_id);
+                current = parent_parent.filter(|id| !self.is_discarded(id));
+            } else {
+                if let Some(parent) = self.matches.get_mut(&parent_id) {
+                    parent.child_ids = child_ids;
+                }
+                return;
             }
         }
     }
